@@ -66,11 +66,11 @@ class AsyncReconnectPsycopg:
                 await asyncio.sleep(2)
             await self._offline.wait()
         await self._cancel_disconnect_task_and_wait()
-        LOGGER.info('Stopped run() from AsyncPsycopgReconnect after closing the connection.')
+        LOGGER.info('Stopped run() from AsyncReconnectPsycopg after closing the connection.')
 
     async def stop(self) -> None:
         """Stop the example by closing the connection after setting self._stopping = True."""
-        LOGGER.info('Closing DB Connection and stopping AsyncPsycopgReconnect.')
+        LOGGER.info('Closing DB Connection and stopping AsyncReconnectPsycopg.')
         self._stopping = True
         async with self._task_lock:  # Lock used to prevent a race condition
             await self.close_connection()
