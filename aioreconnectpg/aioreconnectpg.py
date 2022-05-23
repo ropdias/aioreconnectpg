@@ -9,7 +9,8 @@ LOGGER = logging.getLogger(__name__)
 class AsyncReconnectPsycopg:
     """
     This class connect to a PostgreSQL database using an AsyncConnection from psycopg and uses another AsyncConnection
-    to detect any disconnect (as recommended by psycopg itself).
+    to detect any disconnect as recommended by psycopg itself:
+    https://www.psycopg.org/psycopg3/docs/advanced/async.html#detecting-disconnections
     To start you should use a separate task to call and await run() on the instance of AsyncReconnectPsycopg.
     When you want to stop you can call and await .stop() on the instance of AsyncReconnectPsycopg.
     Before using the main connection with the attribute .aconn is advisable to acquire the attribute task_lock
@@ -68,8 +69,7 @@ class AsyncReconnectPsycopg:
         LOGGER.info('Stopped run() from AsyncPsycopgReconnect after closing the connection.')
 
     async def stop(self) -> None:
-        """Stop the example by closing the connection after setting self._stopping = True.
-        """
+        """Stop the example by closing the connection after setting self._stopping = True."""
         LOGGER.info('Closing DB Connection and stopping AsyncPsycopgReconnect.')
         self._stopping = True
         async with self._task_lock:  # Lock used to prevent a race condition
