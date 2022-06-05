@@ -46,7 +46,7 @@ class AsyncReconnectPsycopg:
         await self._disconnect_event.wait()
         # We will try to close connection so they will change state to "BAD"
         async with self._task_lock:  # Lock used to prevent a race condition
-            await self.close_connection()
+            await self._close_connection()
 
     async def _cancel_disconnect_task_and_wait(self):
         if self._disconnect_task is not None:
@@ -60,7 +60,7 @@ class AsyncReconnectPsycopg:
         while not self._stopping:
             try:
                 async with self._task_lock:  # Lock used to prevent a race condition
-                    await self.connect()
+                    await self._connect()
             except psycopg.Error as error:
                 LOGGER.error(f'Error={error} while trying to connect to DB. Waiting 2 seconds for a retry.')
                 await asyncio.sleep(2)
@@ -69,13 +69,14 @@ class AsyncReconnectPsycopg:
         LOGGER.info('Stopped run() from AsyncReconnectPsycopg after closing the connection.')
 
     async def stop(self) -> None:
-        """Stop the example by closing the connection after setting self._stopping = True."""
+        """Stop the example by closing the connection after setting self._stopping = True.
+        """
         LOGGER.info('Closing DB Connection and stopping AsyncReconnectPsycopg.')
         self._stopping = True
         async with self._task_lock:  # Lock used to prevent a race condition
-            await self.close_connection()
+            await self._close_connection()
 
-    async def connect(self) -> None:
+    async def _connect(self) -> None:
         try:
             LOGGER.info('Trying to connect to DB.')
             self._aconn = await psycopg.AsyncConnection.connect(conninfo=self._conninfo,
@@ -96,7 +97,7 @@ class AsyncReconnectPsycopg:
             await self._cancel_disconnect_task_and_wait()  # To make sure to stop any task that could be running
             self._disconnect_task = asyncio.create_task(self._detect_disconnect())
 
-    async def close_connection(self) -> None:
+    async def _close_connection(self) -> None:
         if self._aconn is not None and not self._aconn.closed:
             LOGGER.info(f'Closing: {self._aconn}')
             await self._aconn.close()
